@@ -149,7 +149,6 @@
             color: var(--text-main);
         }
 
-        /* Зелений накопичувальний лічильник над монетою */
         .mining-display {
             text-align: center;
             margin-bottom: 10px;
@@ -191,7 +190,6 @@
             transform: scale(0.95);
         }
 
-        /* Анімація польоту зелених цифр при натисканні Claim */
         .floating-number {
             position: absolute;
             font-size: 24px;
@@ -312,22 +310,21 @@
 
         <!-- VIEW 1: MINE -->
         <div id="view-mine" class="view-content active">
-            <!-- Загальний баланс зверху -->
             <div class="assets-card" id="assets-card-box">
                 <div class="assets-title">Assets</div>
-                <div class="assets-amount"><span id="total-assets">169.2368</span> UA</div>
+                <div class="assets-amount"><span id="total-assets">171.1868</span> UA</div>
                 <div class="wallet-breakdown">
                     <div>Holding: <b>0 UA</b></div>
-                    <div>Pool Wallet: <b id="pool-assets">169.2368 UA</b></div>
+                    <div>Pool Wallet: <b id="pool-assets">171.1868 UA</b></div>
                 </div>
             </div>
 
-            <!-- Зелений лічильник, який накопичується автоматично -->
+            <!-- Зелений накопичувальний лічильник -->
             <div class="mining-display">
                 <div class="increment-value" id="increment-display">+0.0000</div>
             </div>
 
-            <!-- Монета (клік по ній теж робить Claim) -->
+            <!-- Монета -->
             <div class="coin-container" id="coin-parent">
                 <div class="coin" id="mine-coin" onclick="claimCoins()">
                     <svg viewBox="0 0 500 500" width="110" height="110" xmlns="http://www.w3.org/2000/svg">
@@ -338,7 +335,7 @@
                 </div>
             </div>
 
-            <!-- Кнопка CLAIM для збору зелених нагору -->
+            <!-- Кнопка CLAIM -->
             <button class="claim-btn" onclick="claimCoins()">CLAIM</button>
         </div>
 
@@ -404,33 +401,57 @@
     </nav>
 
     <script>
-        let totalAssets = 169.2368;
-        let pendingGreen = 0.0000; // Накопичені зелені бали
+        let totalAssets = 171.1868;
+        let pendingGreen = 0.0000; 
+        
+        // Повільна швидкість майнінгу: 0.0001 UA за секунду (~0.36 UA на годину)
+        const miningSpeed = 0.0001;
+
+        // Звуковий ефект при кліку / claim
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playClaimSound() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); 
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        }
 
         // Автоматичне збільшення зелених цифр кожну секунду
         setInterval(() => {
-            pendingGreen += 0.0150; // Швидкість майнінгу
+            pendingGreen += miningSpeed;
             document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
         }, 1000);
 
         function claimCoins() {
-            if (pendingGreen <= 0.0001) return; // Якщо нічого збирати
+            if (pendingGreen < 0.0001) return;
 
-            // Додаємо зелені до загального балансу зверху
+            playClaimSound(); 
+
             totalAssets += pendingGreen;
             
-            // Оновлюємо відображення зверху
             document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
             document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
 
-            // Анімація польоту зелених цифр нагору
             showFlyingNumber(pendingGreen);
 
-            // Обнуляємо зелений накопичувач
             pendingGreen = 0.0000;
             document.getElementById('increment-display').innerText = '+0.0000';
 
-            // Ефект натискання монети
             const coin = document.getElementById('mine-coin');
             coin.style.transform = 'scale(0.92)';
             setTimeout(() => {
