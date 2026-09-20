@@ -312,10 +312,10 @@
         <div id="view-mine" class="view-content active">
             <div class="assets-card" id="assets-card-box">
                 <div class="assets-title">Assets</div>
-                <div class="assets-amount"><span id="total-assets">171.1868</span> UA</div>
+                <div class="assets-amount"><span id="total-assets">171.1932</span> UA</div>
                 <div class="wallet-breakdown">
-                    <div>Holding: <b>0 UA</b></div>
-                    <div>Pool Wallet: <b id="pool-assets">171.1868 UA</b></div>
+                    <div>Speed: <b style="color: var(--green-accent);">+0.0001/s</b></div>
+                    <div>Pool Wallet: <b id="pool-assets">171.1932 UA</b></div>
                 </div>
             </div>
 
@@ -401,13 +401,12 @@
     </nav>
 
     <script>
-        let totalAssets = 171.1868;
+        let totalAssets = 171.1932;
         let pendingGreen = 0.0000; 
         
-        // Повільна швидкість майнінгу: 0.0001 UA за секунду (~0.36 UA на годину)
+        // Повільна швидкість майнінгу: 0.0001 UA за секунду
         const miningSpeed = 0.0001;
 
-        // Звуковий ефект при кліку / claim
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
         function playClaimSound() {
@@ -431,7 +430,6 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // Автоматичне збільшення зелених цифр кожну секунду
         setInterval(() => {
             pendingGreen += miningSpeed;
             document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
