@@ -149,17 +149,19 @@
             color: var(--text-main);
         }
 
-        /* Mining Section & Increment right above coin */
+        /* Зелений накопичувальний лічильник над монетою */
         .mining-display {
             text-align: center;
             margin-bottom: 10px;
+            height: 35px;
         }
 
         .increment-value {
-            font-size: 28px;
+            font-size: 30px;
             font-weight: 700;
             color: var(--green-accent);
             text-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            transition: transform 0.1s;
         }
 
         .coin-container {
@@ -189,25 +191,25 @@
             transform: scale(0.95);
         }
 
-        /* Flying animation text when claiming */
+        /* Анімація польоту зелених цифр при натисканні Claim */
         .floating-number {
             position: absolute;
-            font-size: 22px;
+            font-size: 24px;
             font-weight: bold;
             color: var(--green-accent);
             pointer-events: none;
-            animation: floatUp 0.8s ease-out forwards;
+            animation: floatToAssets 0.7s ease-in-out forwards;
             z-index: 50;
         }
 
-        @keyframes floatUp {
+        @keyframes floatToAssets {
             0% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
             100% {
                 opacity: 0;
-                transform: translateY(-140px) scale(1.3);
+                transform: translateY(-220px) scale(0.8);
             }
         }
 
@@ -310,6 +312,7 @@
 
         <!-- VIEW 1: MINE -->
         <div id="view-mine" class="view-content active">
+            <!-- Загальний баланс зверху -->
             <div class="assets-card" id="assets-card-box">
                 <div class="assets-title">Assets</div>
                 <div class="assets-amount"><span id="total-assets">169.2368</span> UA</div>
@@ -319,14 +322,14 @@
                 </div>
             </div>
 
-            <!-- Зелені цифри тепер прямо над монетою -->
+            <!-- Зелений лічильник, який накопичується автоматично -->
             <div class="mining-display">
-                <div class="increment-value" id="increment-display">+0.0730</div>
+                <div class="increment-value" id="increment-display">+0.0000</div>
             </div>
 
+            <!-- Монета (клік по ній теж робить Claim) -->
             <div class="coin-container" id="coin-parent">
-                <div class="coin" id="mine-coin" onclick="manualClaim()">
-                    <!-- Твій фірмовий логотип UA -->
+                <div class="coin" id="mine-coin" onclick="claimCoins()">
                     <svg viewBox="0 0 500 500" width="110" height="110" xmlns="http://www.w3.org/2000/svg">
                         <path d="M100 120 V380 C100 380 100 420 140 420 C180 420 200 390 220 360 L290 240 C310 210 340 180 380 180 C420 180 420 210 420 240 V380" 
                               fill="none" stroke="#1a1a1a" stroke-width="55" stroke-linecap="round" stroke-linejoin="round"/>
@@ -335,7 +338,8 @@
                 </div>
             </div>
 
-            <button class="claim-btn" onclick="manualClaim()">CLAIM</button>
+            <!-- Кнопка CLAIM для збору зелених нагору -->
+            <button class="claim-btn" onclick="claimCoins()">CLAIM</button>
         </div>
 
         <!-- VIEW 2: TASKS -->
@@ -400,47 +404,50 @@
     </nav>
 
     <script>
-        let poolAssets = 169.2368;
-        let incrementValue = 0.0730;
+        let totalAssets = 169.2368;
+        let pendingGreen = 0.0000; // Накопичені зелені бали
 
-        // Автоматичне накопичення
+        // Автоматичне збільшення зелених цифр кожну секунду
         setInterval(() => {
-            poolAssets += 0.0001;
-            document.getElementById('total-assets').innerText = poolAssets.toFixed(4);
-            document.getElementById('pool-assets').innerText = poolAssets.toFixed(4) + ' UA';
+            pendingGreen += 0.0150; // Швидкість майнінгу
+            document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
         }, 1000);
 
-        function manualClaim() {
-            poolAssets += incrementValue;
-            document.getElementById('total-assets').innerText = poolAssets.toFixed(4);
-            document.getElementById('pool-assets').innerText = poolAssets.toFixed(4) + ' UA';
+        function claimCoins() {
+            if (pendingGreen <= 0.0001) return; // Якщо нічого збирати
+
+            // Додаємо зелені до загального балансу зверху
+            totalAssets += pendingGreen;
             
-            // Ефект кліку монети
+            // Оновлюємо відображення зверху
+            document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
+            document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
+
+            // Анімація польоту зелених цифр нагору
+            showFlyingNumber(pendingGreen);
+
+            // Обнуляємо зелений накопичувач
+            pendingGreen = 0.0000;
+            document.getElementById('increment-display').innerText = '+0.0000';
+
+            // Ефект натискання монети
             const coin = document.getElementById('mine-coin');
             coin.style.transform = 'scale(0.92)';
             setTimeout(() => {
                 coin.style.transform = 'scale(1)';
             }, 100);
-
-            // Анімація польоту цифр вгору до балансу
-            showFloatingNumber();
         }
 
-        function showFloatingNumber() {
+        function showFlyingNumber(amount) {
             const container = document.getElementById('coin-parent');
             const flyer = document.createElement('div');
             flyer.className = 'floating-number';
-            flyer.innerText = '+' + incrementValue.toFixed(4);
+            flyer.innerText = '+' + amount.toFixed(4);
             
-            // Рандомне зміщення по горизонталі
-            const randomX = (Math.random() - 0.5) * 60;
-            flyer.style.left = `calc(50% + ${randomX}px)`;
-            flyer.style.top = '10px';
-
             container.appendChild(flyer);
             setTimeout(() => {
                 flyer.remove();
-            }, 800);
+            }, 700);
         }
 
         function switchView(viewId, element) {
