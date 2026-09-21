@@ -116,7 +116,6 @@
             min-height: 40px;
         }
 
-        /* Обновленная карточка баланса с неоновым акцентом */
         .assets-card {
             background: linear-gradient(145deg, rgba(22, 22, 26, 0.9), rgba(30, 30, 38, 0.7));
             border: 1px solid var(--card-border);
@@ -185,7 +184,6 @@
             position: relative;
         }
 
-        /* Крутая анимированная монета */
         .coin {
             width: 170px;
             height: 170px;
@@ -249,7 +247,6 @@
             box-shadow: 0 2px 10px rgba(243, 186, 47, 0.2);
         }
 
-        /* Навигационная панель */
         nav {
             position: fixed;
             bottom: 0;
@@ -307,7 +304,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Карточки разделов */
         .section-title {
             font-size: 20px;
             font-weight: 700;
@@ -381,12 +377,10 @@
                 </div>
             </div>
 
-            <!-- Зелений накопичувальний лічильник -->
             <div class="mining-display">
                 <div class="increment-value" id="increment-display">+0.0000</div>
             </div>
 
-            <!-- Монета -->
             <div class="coin-container" id="coin-parent">
                 <div class="coin" id="mine-coin" onclick="claimCoins()">
                     <svg viewBox="0 0 500 500" width="105" height="105" xmlns="http://www.w3.org/2000/svg">
@@ -397,7 +391,6 @@
                 </div>
             </div>
 
-            <!-- Кнопка CLAIM -->
             <button class="claim-btn" onclick="claimCoins()">ЗБРАТИ МОНЕТИ (CLAIM)</button>
         </div>
 
@@ -488,8 +481,13 @@
 
         let tonConnectUI;
         document.addEventListener("DOMContentLoaded", () => {
+            // Передаємо маніфест напряму об'єктом у пам'яті (без окремого файлу .json)
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
+                manifestUrl: {
+                    url: 'https://providnykzpoun.github.io/Minning-UA',
+                    name: 'UA Token Mining',
+                    iconUrl: 'https://avatars.githubusercontent.com/u/1?v=4'
+                },
                 buttonRootId: 'ton-connect-button'
             });
 
