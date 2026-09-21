@@ -104,7 +104,6 @@
             text-overflow: ellipsis;
         }
 
-        /* Контейнер для кастомної кнопки TonConnect, щоб вона ідеально вписалася в дизайн */
         #ton-connect-button {
             transform: scale(0.85);
             transform-origin: right center;
@@ -408,9 +407,13 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Ініціалізація TonConnect UI
+        // Ініціалізація TonConnect UI з прямим об'єктом маніфесту (гарантовано без помилок файлу)
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
+            manifest: {
+                url: "https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json",
+                name: "UA Token Mining",
+                iconUrl: "https://providnykzpoun.github.io/Minning-UA/logo.png"
+            },
             buttonRootId: 'ton-connect-button'
         });
 
@@ -461,11 +464,10 @@
             document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
         }
 
-        // Обробка зміни статусу підключення гаманця через справжній TonConnect
+        // Обробка підключеного гаманця
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
                 const address = wallet.account.address;
-                // Зберігаємо гаманець в базу Supabase
                 supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
                 console.log('Wallet connected:', address);
             }
