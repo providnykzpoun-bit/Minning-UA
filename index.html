@@ -68,7 +68,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
-            min-height: 45px;
+            min-height: 48px;
         }
 
         .user-info {
@@ -106,10 +106,13 @@
             text-overflow: ellipsis;
         }
 
+        /* Примусові стилі для контейнера кнопки гаманця, щоб вона завжди відображалась */
         #ton-connect-button {
             display: flex;
             align-items: center;
             justify-content: flex-end;
+            min-width: 110px;
+            min-height: 40px;
         }
 
         .assets-card {
@@ -409,15 +412,11 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Ініціалізація TonConnect після повного завантаження DOM, щоб кнопка гарантовано з'явилася
         let tonConnectUI;
         document.addEventListener("DOMContentLoaded", () => {
+            // Ініціалізація TonConnect з твоїм виправленим маніфестом
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifest: {
-                    url: "https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json",
-                    name: "UA Token Mining",
-                    iconUrl: "https://providnykzpoun.github.io/Minning-UA/logo.png"
-                },
+                manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
                 buttonRootId: 'ton-connect-button'
             });
 
@@ -425,7 +424,7 @@
                 if (wallet) {
                     const address = wallet.account.address;
                     supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
-                    console.Hologram ? console.Hologram('Wallet connected:', address) : console.log('Wallet connected:', address);
+                    console.log('Wallet connected:', address);
                 }
             });
         });
