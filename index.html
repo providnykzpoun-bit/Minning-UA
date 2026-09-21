@@ -527,9 +527,16 @@
 
         loadUserData();
 
-        // Ініціалізація TON Connect через файл маніфесту на GitHub Pages
+        // Вшитий маніфест без зовнішніх файлів (виключає помилки 404 та помилки маніфесту)
+        const manifestString = JSON.stringify({
+            url: "https://providnykzpoun-bit.github.io/Minning-UA",
+            name: "UA Token Mining",
+            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
+        });
+        const manifestUri = 'data:application/json;base64,' + btoa(manifestString);
+
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://providnykzpoun-bit.github.io/Minning-UA/tonconnect-manifest.json',
+            manifestUrl: manifestUri,
             buttonRootId: 'ton-connect-button'
         });
 
@@ -628,6 +635,7 @@
         }
 
         function switchView(viewId, element) {
+            document.querySelectorAll('.view-content').clearClasses?.(); // safe fallback
             document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
             document.getElementById('view-' + viewId).classList.add('active');
 
