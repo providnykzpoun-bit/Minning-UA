@@ -481,9 +481,17 @@
 
         let tonConnectUI;
         document.addEventListener("DOMContentLoaded", () => {
-            // Використовуємо абсолютний шлях до файлу маніфесту на GitHub Pages
+            // Динамическое создание манифеста в памяти через Data URI — полностью исключает ошибки 404 и проблемы с хостингом
+            const manifestData = {
+                url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
+                name: "UA Token Mining",
+                iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
+            };
+            const manifestJson = JSON.stringify(manifestData);
+            const manifestUrl = "data:application/json;base64," + btoa(unescape(encodeURIComponent(manifestJson)));
+
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
+                manifestUrl: manifestUrl,
                 buttonRootId: 'ton-connect-button'
             });
 
@@ -533,7 +541,7 @@
                 totalAssets = parseFloat(data.balance);
                 updateUI();
             } else {
-                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets, name: userName }]);
+                await supabaseClient.from('users'].insert([{ id: userId, balance: totalAssets, name: userName }]);
             }
         }
 
