@@ -362,7 +362,7 @@
                     <div style="font-size: 11px; color: var(--gold-primary); font-weight: 600;" id="user-lvl">Засновник 👑</div>
                 </div>
             </div>
-            <!-- Кнопка гаманця -->
+            <!-- Кнопка гаманця повернена на місце -->
             <div id="ton-connect-button"></div>
         </header>
 
@@ -481,17 +481,8 @@
 
         let tonConnectUI;
         document.addEventListener("DOMContentLoaded", () => {
-            // Динамическое создание манифеста в памяти через Data URI — полностью исключает ошибки 404 и проблемы с хостингом
-            const manifestData = {
-                url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
-                name: "UA Token Mining",
-                iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
-            };
-            const manifestJson = JSON.stringify(manifestData);
-            const manifestUrl = "data:application/json;base64," + btoa(unescape(encodeURIComponent(manifestJson)));
-
-            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: manifestUrl,
+            tonConnectUI = new TonConnectUI({
+                manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
                 buttonRootId: 'ton-connect-button'
             });
 
@@ -541,7 +532,7 @@
                 totalAssets = parseFloat(data.balance);
                 updateUI();
             } else {
-                await supabaseClient.from('users'].insert([{ id: userId, balance: totalAssets, name: userName }]);
+                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets, name: userName }]);
             }
         }
 
@@ -554,7 +545,12 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
+        let lastClickTime = 0;
         function playClaimSound() {
+            const now = Date.now();
+            if (now - lastClickTime < 80) return; // захист від спаму звуку
+            lastClickTime = now;
+
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
@@ -565,14 +561,14 @@
             osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
             osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); 
             
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
             
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.stop(audioCtx.currentTime + 0.2);
         }
 
         setInterval(() => {
