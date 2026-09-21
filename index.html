@@ -3,161 +3,545 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UA Mining</title>
-    <!-- Підключаємо TonConnect UI CDN -->
+    <title>UA Token Mining</title>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- TonConnect UI CDN -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <!-- Підключаємо Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #121212;
-            color: #ffffff;
-            font-family: Arial, sans-serif;
+        :root {
+            --bg-color: #0c0c0e;
+            --card-bg: #16161a;
+            --gold-primary: #f3ba2f;
+            --gold-gradient: linear-gradient(135deg, #f3ba2f 0%, #d49811 100%);
+            --text-main: #ffffff;
+            --text-secondary: #8b8b93;
+            --green-accent: #00ff88;
+        }
+
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            height: 100vh;
+            min-height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
         }
-        .header {
-            width: 100%;
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(243, 186, 47, 0.15) 0%, rgba(0,0,0,0) 70%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            z-index: 1;
+            padding-bottom: 80px;
+        }
+
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px;
-            box-sizing: border-box;
+            margin-bottom: 20px;
         }
+
         .user-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
+
         .avatar {
-            width: 40px;
-            height: 40px;
-            background: #ffd700;
+            width: 36px;
+            height: 36px;
+            background: var(--gold-gradient);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #000;
             font-weight: bold;
+            color: #000;
+            overflow: hidden;
         }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .username {
+            font-weight: 600;
+            font-size: 14px;
+            max-width: 110px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Контейнер для кастомної кнопки TonConnect, щоб вона ідеально вписалася в дизайн */
         #ton-connect-button {
-            cursor: pointer;
+            transform: scale(0.85);
+            transform-origin: right center;
         }
+
         .assets-card {
-            background: #1e1e1e;
+            background: rgba(22, 22, 26, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
             padding: 20px;
-            border-radius: 12px;
             text-align: center;
-            width: 90%;
-            max-width: 400px;
-        }
-        .balance {
-            font-size: 28px;
-            font-weight: bold;
-            color: #ffd700;
-            margin: 10px 0;
-        }
-        .claim-btn {
-            background-color: #ffd700;
-            color: #000;
-            border: none;
-            padding: 15px;
-            width: 90%;
-            max-width: 400px;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
             margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            position: relative;
         }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: #242424;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+
+        .assets-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .assets-amount {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 12px;
+        }
+
+        .assets-amount span {
+            color: var(--gold-primary);
+        }
+
+        .wallet-breakdown {
+            display: flex;
+            justify-content: space-around;
+            font-size: 12px;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 12px;
+        }
+
+        .wallet-breakdown b {
+            color: var(--text-main);
+        }
+
+        .mining-display {
             text-align: center;
-            z-index: 1000;
-            width: 80%;
-            max-width: 300px;
+            margin-bottom: 10px;
+            height: 35px;
         }
-        .modal button {
-            background: #2f8af5;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            margin-top: 15px;
+
+        .increment-value {
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--green-accent);
+            text-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .coin-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0 30px 0;
+            position: relative;
+        }
+
+        .coin {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #ffe066 0%, #f3ba2f 50%, #b8860b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(243, 186, 47, 0.4), inset 0 0 15px rgba(255, 255, 255, 0.5);
+            border: 4px solid #ffe680;
+            position: relative;
             cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .coin:active {
+            transform: scale(0.95);
+        }
+
+        .floating-number {
+            position: absolute;
+            font-size: 24px;
             font-weight: bold;
+            color: var(--green-accent);
+            pointer-events: none;
+            animation: floatToAssets 0.7s ease-in-out forwards;
+            z-index: 50;
+        }
+
+        @keyframes floatToAssets {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-220px) scale(0.8);
+            }
+        }
+
+        .claim-btn {
+            width: 100%;
+            background: var(--gold-gradient);
+            color: #111;
+            font-size: 18px;
+            font-weight: 700;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(243, 186, 47, 0.3);
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: auto;
+        }
+
+        .claim-btn:active {
+            transform: scale(0.98);
+            opacity: 0.9;
+        }
+
+        nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: rgba(18, 18, 22, 0.95);
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: var(--gold-primary);
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            fill: currentColor;
+        }
+
+        .view-content {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .view-content.active {
+            display: flex;
+        }
+
+        .placeholder-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            border: 1px solid rgba(255,255,255,0.05);
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="user-info">
-            <div class="avatar">UA</div>
-            <div>
-                <div style="font-size: 14px; font-weight: bold;">ГАНС 🐝 Гайде...</div>
-                <div style="font-size: 11px; color: #888;">Lvl 22</div>
+    <div class="container">
+        <!-- HEADER -->
+        <header>
+            <div class="user-info">
+                <div class="avatar" id="user-avatar">М</div>
+                <div>
+                    <div class="username" id="user-name">Михайло 🐝</div>
+                    <div style="font-size: 10px; color: var(--text-secondary);" id="user-lvl">Lvl 22</div>
+                </div>
+            </div>
+            <!-- Кнопка TonConnect у правому кутку -->
+            <div id="ton-connect-button"></div>
+        </header>
+
+        <!-- VIEW 1: MINE -->
+        <div id="view-mine" class="view-content active">
+            <div class="assets-card" id="assets-card-box">
+                <div class="assets-title">Assets</div>
+                <div class="assets-amount"><span id="total-assets">171.1932</span> UA</div>
+                <div class="wallet-breakdown">
+                    <div>Speed: <b style="color: var(--green-accent);">+0.0001/s</b></div>
+                    <div>Pool Wallet: <b id="pool-assets">171.1932 UA</b></div>
+                </div>
+            </div>
+
+            <!-- Зелений накопичувальний лічильник -->
+            <div class="mining-display">
+                <div class="increment-value" id="increment-display">+0.0000</div>
+            </div>
+
+            <!-- Монета -->
+            <div class="coin-container" id="coin-parent">
+                <div class="coin" id="mine-coin" onclick="claimCoins()">
+                    <svg viewBox="0 0 500 500" width="110" height="110" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 120 V380 C100 380 100 420 140 420 C180 420 200 390 220 360 L290 240 C310 210 340 180 380 180 C420 180 420 210 420 240 V380" 
+                              fill="none" stroke="#1a1a1a" stroke-width="55" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M285 245 H420" fill="none" stroke="#1a1a1a" stroke-width="45" stroke-linecap="round"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Кнопка CLAIM -->
+            <button class="claim-btn" onclick="claimCoins()">CLAIM</button>
+        </div>
+
+        <!-- VIEW 2: TASKS -->
+        <div id="view-tasks" class="view-content">
+            <h2 style="margin-bottom: 15px;">Щоденні завдання</h2>
+            <div class="placeholder-card">
+                <p>Підписатися на Telegram канал — <b>+5.0 UA</b></p>
+            </div>
+            <div class="placeholder-card">
+                <p>Запросити друга — <b>+10.0 UA</b></p>
             </div>
         </div>
-        <!-- Кнопка TonConnect -->
-        <div id="ton-connect-button"></div>
+
+        <!-- VIEW 3: MINERS -->
+        <div id="view-miners" class="view-content">
+            <h2 style="margin-bottom: 15px;">Апгрейд майнінгу</h2>
+            <div class="placeholder-card">
+                <p>Прискорити генерацію монет та збільшити рівень.</p>
+            </div>
+        </div>
+
+        <!-- VIEW 4: FRIENDS -->
+        <div id="view-friends" class="view-content">
+            <h2 style="margin-bottom: 15px;">Реферали</h2>
+            <div class="placeholder-card">
+                <p>Запрошуйте друзів та отримуйте 10% від їхнього майнінгу.</p>
+            </div>
+        </div>
+
+        <!-- VIEW 5: PROFILE -->
+        <div id="view-profile" class="view-content">
+            <h2 style="margin-bottom: 15px;">Профіль користувача</h2>
+            <div class="placeholder-card">
+                <p>Статус: Активний засновник</p>
+            </div>
+        </div>
     </div>
 
-    <div class="assets-card">
-        <div style="font-size: 12px; color: #888; text-transform: uppercase;">Assets</div>
-        <div class="balance" id="balance-amount">171.1932 UA</div>
-        <div style="font-size: 12px; color: #00ff88;">Speed: +0.0001/s</div>
-    </div>
-
-    <button class="claim-btn" onclick="claimTokens()">CLAIM</button>
-
-    <!-- Сповіщення про підключення гаманця -->
-    <div id="notification-modal" class="modal">
-        <div id="modal-text" style="font-size: 16px; font-weight: 500;">Гаманець успішно підключено!</div>
-        <button onclick="closeModal()">Закрити</button>
-    </div>
+    <!-- NAVIGATION BAR -->
+    <nav>
+        <button class="nav-item active" onclick="switchView('mine', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Mine
+        </button>
+        <button class="nav-item" onclick="switchView('tasks', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            Tasks
+        </button>
+        <button class="nav-item" onclick="switchView('miners', this)">
+            <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
+            Miners
+        </button>
+        <button class="nav-item" onclick="switchView('friends', this)">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            Friends
+        </button>
+        <button class="nav-item" onclick="switchView('profile', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            Profile
+        </button>
+    </nav>
 
     <script>
-        // Ініціалізація TonConnect UI з правильним шляхом до маніфесту
+        // Ініціалізація Telegram WebApp
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Ініціалізація TonConnect UI
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
             manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
-        // Слухаємо зміну стану гаманця
+        const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_OGR39bNiTJ4JPk5JjvEW5g_mqDZZwYj';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let userId = 'user_leslav';
+        let userName = 'Михайло 🐝';
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            userId = 'tg_' + tgUser.id;
+            userName = tgUser.first_name + (tgUser.last_name ? ' ' + tgUser.last_name : '');
+            
+            if (tgUser.photo_url) {
+                document.getElementById('user-avatar').innerHTML = `<img src="${tgUser.photo_url}" alt="Avatar">`;
+            } else {
+                document.getElementById('user-avatar').innerText = tgUser.first_name.charAt(0);
+            }
+        }
+
+        document.getElementById('user-name').innerText = userName;
+
+        let totalAssets = 171.1932;
+        let pendingGreen = 0.0000; 
+        const miningSpeed = 0.0001;
+
+        async function loadUserData() {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('balance, wallet')
+                .eq('id', userId)
+                .single();
+
+            if (data) {
+                totalAssets = parseFloat(data.balance);
+                updateUI();
+            } else {
+                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets, name: userName }]);
+            }
+        }
+
+        loadUserData();
+
+        function updateUI() {
+            document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
+            document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
+        }
+
+        // Обробка зміни статусу підключення гаманця через справжній TonConnect
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
-                document.getElementById('notification-modal').style.display = 'block';
-                console.log('Wallet connected:', wallet.account.address);
-            } else {
-                console.log('Wallet disconnected');
+                const address = wallet.account.address;
+                // Зберігаємо гаманець в базу Supabase
+                supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
+                console.log('Wallet connected:', address);
             }
         });
 
-        function closeModal() {
-            document.getElementById('notification-modal').style.display = 'none';
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playClaimSound() {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); 
+            osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); 
+            
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // Імітація майнінгу балансу
-        let currentBalance = 171.1932;
         setInterval(() => {
-            currentBalance += 0.0001;
-            document.getElementById('balance-amount').innerText = currentBalance.toFixed(4) + ' UA';
+            pendingGreen += miningSpeed;
+            document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
         }, 1000);
 
-        function claimTokens() {
-            alert('Успішно зібрано!');
+        async function claimCoins() {
+            if (pendingGreen < 0.0001) return;
+
+            playClaimSound(); 
+
+            totalAssets += pendingGreen;
+            updateUI();
+
+            showFlyingNumber(pendingGreen);
+
+            pendingGreen = 0.0000;
+            document.getElementById('increment-display').innerText = '+0.0000';
+
+            await supabaseClient
+                .from('users')
+                .update({ balance: totalAssets })
+                .eq('id', userId);
+
+            const coin = document.getElementById('mine-coin');
+            coin.style.transform = 'scale(0.92)';
+            setTimeout(() => {
+                coin.style.transform = 'scale(1)';
+            }, 100);
+        }
+
+        function showFlyingNumber(amount) {
+            const container = document.getElementById('coin-parent');
+            const flyer = document.createElement('div');
+            flyer.className = 'floating-number';
+            flyer.innerText = '+' + amount.toFixed(4);
+            
+            container.appendChild(flyer);
+            setTimeout(() => {
+                flyer.remove();
+            }, 700);
+        }
+
+        function switchView(viewId, element) {
+            document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
         }
     </script>
 </body>
