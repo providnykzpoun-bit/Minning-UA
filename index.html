@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UA Token Mining</title>
+    <!-- Підключаємо бібліотеку Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-color: #0c0c0e;
@@ -401,11 +403,37 @@
     </nav>
 
     <script>
+        // Підключення до Supabase з твоїм ключем
+        const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_OGR39bNiTJ4JPk5JjvEW5g_mqDZZwYj';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let totalAssets = 171.1932;
         let pendingGreen = 0.0000; 
-        
-        // Повільна швидкість майнінгу: 0.0001 UA за секунду
         const miningSpeed = 0.0001;
+        const userId = 'user_leslav'; 
+
+        async function loadUserData() {
+            const { data, error } = await supabaseClient
+                .from('users')
+                .select('balance')
+                .eq('id', userId)
+                .single();
+
+            if (data) {
+                totalAssets = parseFloat(data.balance);
+                updateUI();
+            } else {
+                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets }]);
+            }
+        }
+
+        loadUserData();
+
+        function updateUI() {
+            document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
+            document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
+        }
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -435,20 +463,23 @@
             document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
         }, 1000);
 
-        function claimCoins() {
+        async function claimCoins() {
             if (pendingGreen < 0.0001) return;
 
             playClaimSound(); 
 
             totalAssets += pendingGreen;
-            
-            document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
-            document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
+            updateUI();
 
             showFlyingNumber(pendingGreen);
 
             pendingGreen = 0.0000;
             document.getElementById('increment-display').innerText = '+0.0000';
+
+            await supabaseClient
+                .from('users')
+                .update({ balance: totalAssets })
+                .eq('id', userId);
 
             const coin = document.getElementById('mine-coin');
             coin.style.transform = 'scale(0.92)';
