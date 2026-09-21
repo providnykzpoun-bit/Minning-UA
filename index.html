@@ -307,7 +307,7 @@
                     <div style="font-size: 10px; color: var(--text-secondary);" id="user-lvl">Lvl 22</div>
                 </div>
             </div>
-            <!-- Кнопка гаманця повертається на місце -->
+            <!-- Кнопка гаманця -->
             <div id="ton-connect-button"></div>
         </header>
 
@@ -406,9 +406,13 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Стандартна ініціалізація TonConnect UI через пряме посилання на маніфест
+        // Ініціалізація TonConnect через прямий об'єкт маніфесту (без помилок файлу)
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
+            manifest: {
+                url: "https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json",
+                name: "UA Token Mining",
+                iconUrl: "https://providnykzpoun.github.io/Minning-UA/logo.png"
+            },
             buttonRootId: 'ton-connect-button'
         });
 
@@ -490,7 +494,6 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
-        // Майнінг / калькуляція зеленого приросту
         setInterval(() => {
             pendingGreen += miningSpeed;
             document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
