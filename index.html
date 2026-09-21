@@ -494,17 +494,8 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Повністю автономний маніфест через Data URI — жодних помилок 404 та каченят
-        const manifestData = {
-            url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
-            name: "UA Token Mining",
-            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
-        };
-        const manifestJson = JSON.stringify(manifestData);
-        const manifestUrl = "data:application/json;base64," + btoa(unescape(encodeURIComponent(manifestJson)));
-
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: manifestUrl
+            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json'
         });
 
         tonConnectUI.onStatusChange(wallet => {
