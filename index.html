@@ -527,16 +527,9 @@
 
         loadUserData();
 
-        // Вбудований маніфест (вирішує проблеми з файлами на GitHub Pages)
-        const manifestString = JSON.stringify({
-            url: "https://providnykzpoun.github.io/Minning-UA",
-            name: "UA Token Mining",
-            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
-        });
-        const manifestUri = 'data:application/json;base64,' + btoa(manifestString);
-
+        // Ініціалізація TON Connect через файл маніфесту на GitHub Pages
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: manifestUri,
+            manifestUrl: 'https://providnykzpoun-bit.github.io/Minning-UA/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
