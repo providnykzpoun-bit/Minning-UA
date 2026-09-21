@@ -527,13 +527,19 @@
 
         loadUserData();
 
-        // Ініціалізація TON Connect UI з вашим реальним маніфестом
+        // Вбудований маніфест (вирішує проблеми з файлами на GitHub Pages)
+        const manifestString = JSON.stringify({
+            url: "https://providnykzpoun.github.io/Minning-UA",
+            name: "UA Token Mining",
+            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
+        });
+        const manifestUri = 'data:application/json;base64,' + btoa(manifestString);
+
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
+            manifestUrl: manifestUri,
             buttonRootId: 'ton-connect-button'
         });
 
-        // Відстеження зміни статусу підключення гаманця
         tonConnectUI.onStatusChange(async (wallet) => {
             if (wallet) {
                 const userFriendlyAddress = tonConnectUI.wallet.account.address; 
