@@ -494,7 +494,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Динамічний маніфест через Data URI (без зовнішніх файлів, які блокуються)
+        // Повністю автономний маніфест через Data URI — жодних помилок 404 та каченят
         const manifestData = {
             url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
             name: "UA Token Mining",
