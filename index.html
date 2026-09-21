@@ -7,7 +7,6 @@
     <!-- Підключаємо TonConnect UI CDN -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
-        /* Твої стилі інтерфейсу (темна темізація, кнопки тощо) */
         body {
             background-color: #121212;
             color: #ffffff;
@@ -44,7 +43,6 @@
             color: #000;
             font-weight: bold;
         }
-        /* Контейнер для кнопки TonConnect */
         #ton-connect-button {
             cursor: pointer;
         }
@@ -75,7 +73,6 @@
             cursor: pointer;
             margin-bottom: 20px;
         }
-        /* Сповіщення (як на скріншоті) */
         .modal {
             display: none;
             position: fixed;
@@ -113,7 +110,7 @@
                 <div style="font-size: 11px; color: #888;">Lvl 22</div>
             </div>
         </div>
-        <!-- Сюди TonConnect автоматично вбудує свою кнопку підключення -->
+        <!-- Кнопка TonConnect -->
         <div id="ton-connect-button"></div>
     </div>
 
@@ -132,16 +129,15 @@
     </div>
 
     <script>
-        // Ініціалізація TonConnect UI
+        // Ініціалізація TonConnect UI з правильним шляхом до маніфесту
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://leslav2007.github.io/ua-mining/tonconnect-manifest.json', // Твоє посилання на маніфест
+            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
         // Слухаємо зміну стану гаманця
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
-                // Показуємо модальне вікно успішного підключення
                 document.getElementById('notification-modal').style.display = 'block';
                 console.log('Wallet connected:', wallet.account.address);
             } else {
@@ -153,7 +149,7 @@
             document.getElementById('notification-modal').style.display = 'none';
         }
 
-        // Імітація майнінгу для балансу
+        // Імітація майнінгу балансу
         let currentBalance = 171.1932;
         setInterval(() => {
             currentBalance += 0.0001;
