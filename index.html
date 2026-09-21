@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UA Token Mining</title>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- Підключаємо бібліотеку Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -82,11 +84,22 @@
             justify-content: center;
             font-weight: bold;
             color: #000;
+            overflow: hidden;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         .username {
             font-weight: 600;
-            font-size: 16px;
+            font-size: 15px;
+            max-width: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .level-badge {
@@ -106,6 +119,11 @@
             font-size: 13px;
             color: var(--text-secondary);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+
+        .wallet-pill:active {
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .assets-card {
@@ -300,14 +318,14 @@
         <!-- HEADER -->
         <header>
             <div class="user-info">
-                <div class="avatar">М</div>
+                <div class="avatar" id="user-avatar">М</div>
                 <div>
-                    <div class="username">Михайло 🐝</div>
-                    <div style="font-size: 11px; color: var(--text-secondary);">Lvl 22</div>
+                    <div class="username" id="user-name">Михайло 🐝</div>
+                    <div style="font-size: 11px; color: var(--text-secondary);" id="user-lvl">Lvl 22</div>
                 </div>
             </div>
             <div class="level-badge">READY</div>
-            <div class="wallet-pill">UQDX...RtWw ▾</div>
+            <div class="wallet-pill" id="wallet-btn" onclick="connectWallet()">Connect ▾</div>
         </header>
 
         <!-- VIEW 1: MINE -->
@@ -372,7 +390,7 @@
         <div id="view-profile" class="view-content">
             <h2 style="margin-bottom: 15px;">Профіль користувача</h2>
             <div class="placeholder-card">
-                <p>Гаманець: <b>UQDX...RtWw</b></p>
+                <p>Гаманець: <b id="profile-wallet">Не підключено</b></p>
                 <p style="margin-top: 8px;">Статус: Активний засновник</p>
             </div>
         </div>
@@ -403,28 +421,53 @@
     </nav>
 
     <script>
-        // Підключення до Supabase з твоїм ключем
+        // Ініціалізація Telegram WebApp та Supabase
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
         const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OGR39bNiTJ4JPk5JjvEW5g_mqDZZwYj';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+        // Визначаємо унікальний ID користувача (з Телеграма або запасний)
+        let userId = 'user_leslav';
+        let userName = 'Михайло 🐝';
+
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            const tgUser = tg.initDataUnsafe.user;
+            userId = 'tg_' + tgUser.id;
+            userName = tgUser.first_name + (tgUser.last_name ? ' ' + tgUser.last_name : '');
+            
+            // Якщо є аватарка в телеграмі
+            if (tgUser.photo_url) {
+                document.getElementById('user-avatar').innerHTML = `<img src="${tgUser.photo_url}" alt="Avatar">`;
+            } else {
+                document.getElementById('user-avatar').innerText = tgUser.first_name.charAt(0);
+            }
+        }
+
+        document.getElementById('user-name').innerText = userName;
+
         let totalAssets = 171.1932;
         let pendingGreen = 0.0000; 
         const miningSpeed = 0.0001;
-        const userId = 'user_leslav'; 
 
         async function loadUserData() {
             const { data, error } = await supabaseClient
                 .from('users')
-                .select('balance')
+                .select('balance, wallet')
                 .eq('id', userId)
                 .single();
 
             if (data) {
                 totalAssets = parseFloat(data.balance);
+                if (data.wallet) {
+                    updateWalletUI(data.wallet);
+                }
                 updateUI();
             } else {
-                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets }]);
+                // Створюємо нового користувача в базі
+                await supabaseClient.from('users').insert([{ id: userId, balance: totalAssets, name: userName }]);
             }
         }
 
@@ -498,6 +541,21 @@
             setTimeout(() => {
                 flyer.remove();
             }, 700);
+        }
+
+        function connectWallet() {
+            // Симуляція підключення TON гаманця (в майбутньому підключимо SDK TonConnect)
+            let sampleWallet = "UQDX...RtWw";
+            updateWalletUI(sampleWallet);
+            
+            // Зберігаємо в базу
+            supabaseClient.from('users').update({ wallet: sampleWallet }).eq('id', userId);
+            tg.showAlert("Гаманець успішно підключено!");
+        }
+
+        function updateWalletUI(walletStr) {
+            document.getElementById('wallet-btn').innerText = walletStr.substring(0, 6) + '...';
+            document.getElementById('profile-wallet').innerText = walletStr;
         }
 
         function switchView(viewId, element) {
