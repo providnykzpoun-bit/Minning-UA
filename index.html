@@ -7,7 +7,7 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- TonConnect UI CDN -->
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -108,24 +108,24 @@
             text-overflow: ellipsis;
         }
 
-        #ton-connect-button {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            min-width: 110px;
-            min-height: 40px;
+        .wallet-status-badge {
+            background: rgba(22, 22, 26, 0.9);
+            border: 1px solid var(--gold-primary);
+            border-radius: 12px;
+            padding: 6px 12px;
+            text-align: right;
+            cursor: pointer;
+            box-shadow: 0 0 8px rgba(243, 186, 47, 0.2);
         }
 
-        /* Якщо бібліотека не завантажилась, покажемо резервну кнопку */
-        .fallback-btn {
-            background: linear-gradient(135deg, #0098EA 0%, #0066AA 100%);
-            color: #fff;
-            padding: 8px 12px;
-            font-size: 12px;
-            border-radius: 12px;
-            border: none;
+        .wallet-status-text {
+            font-size: 11px;
             font-weight: bold;
-            cursor: pointer;
+            color: #ff4d4d;
+        }
+
+        .wallet-status-text.connected {
+            color: var(--green-accent);
         }
 
         .assets-card {
@@ -375,9 +375,9 @@
                 </div>
             </div>
             <!-- Кнопка гаманця -->
-            <div id="ton-connect-button">
-                <!-- Тимчасова кнопка, поки завантажується бібліотека -->
-                <button class="fallback-btn" id="fallback-wallet-btn" onclick="fallbackConnect()">Connect Wallet</button>
+            <div class="wallet-status-badge" onclick="openWalletModal()">
+                <div style="font-size: 9px; color: var(--text-secondary);">TON Гаманець</div>
+                <div class="wallet-status-text" id="wallet-status-text">Підключити</div>
             </div>
         </header>
 
@@ -494,51 +494,36 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let tonConnectUI;
+        // Ініціалізація TonConnect
+        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json'
+        });
 
-        // Функція для ручного запуску, якщо щось піде не так
-        function fallbackConnect() {
-            if (tonConnectUI) {
-                tonConnectUI.connectWallet();
+        tonConnectUI.onStatusChange(wallet => {
+            const statusText = document.getElementById('wallet-status-text');
+            if (wallet) {
+                const address = wallet.account.address;
+                const shortAddr = address.slice(0, 4) + '...' + address.slice(-4);
+                statusText.innerText = shortAddr;
+                statusText.classList.add('connected');
+                supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
             } else {
-                initTonConnect();
+                statusText.innerText = 'Підключити';
+                statusText.classList.remove('connected');
             }
-        }
+        });
 
-        // Ініціалізація з очікуванням повного завантаження
-        function initTonConnect() {
+        async function openWalletModal() {
             try {
-                if (typeof TON_CONNECT_UI !== 'undefined') {
-                    // Видаляємо тимчасову кнопку перед ініціалізацією
-                    const btnContainer = document.getElementById('ton-connect-button');
-                    if (document.getElementById('fallback-wallet-btn')) {
-                        btnContainer.innerHTML = ''; 
-                    }
-
-                    // Маніфест безпосередньо з вашого GitHub Pages, як у грі "Царь"
-                    tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                        manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
-                        buttonRootId: 'ton-connect-button'
-                    });
-
-                    tonConnectUI.onStatusChange(wallet => {
-                        if (wallet) {
-                            const address = wallet.account.address;
-                            supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
-                            console.log('Wallet connected:', address);
-                        }
-                    });
+                if (tonConnectUI.connected) {
+                    await tonConnectUI.disconnect();
                 } else {
-                    // Якщо бібліотека не завантажилась одразу, пробуємо ще раз через 500мс
-                    setTimeout(initTonConnect, 500);
+                    await tonConnectUI.openModal();
                 }
-            } catch (e) {
-                console.error("TonConnect init error:", e);
+            } catch (error) {
+                console.error("TonConnect error:", error);
             }
         }
-
-        // Запуск при завантаженні вікна
-        window.addEventListener('load', initTonConnect);
 
         const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_OGR39bNiTJ4JPk5JjvEW5g_mqDZZwYj';
@@ -593,7 +578,7 @@
         let lastClickTime = 0;
         function playClaimSound() {
             const now = Date.now();
-            if (now - lastClickTime < 80) return; // захист від спаму звуку
+            if (now - lastClickTime < 80) return;
             lastClickTime = now;
 
             if (audioCtx.state === 'suspended') {
