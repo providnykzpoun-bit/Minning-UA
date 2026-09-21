@@ -8,7 +8,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- TonConnect UI CDN -->
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <!-- Підключаємо Supabase JS -->
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
@@ -307,7 +307,7 @@
                     <div style="font-size: 10px; color: var(--text-secondary);" id="user-lvl">Lvl 22</div>
                 </div>
             </div>
-            <!-- Кнопка TonConnect у правому кутку -->
+            <!-- Кнопка гаманця повертається на місце -->
             <div id="ton-connect-button"></div>
         </header>
 
@@ -403,17 +403,12 @@
     </nav>
 
     <script>
-        // Ініціалізація Telegram WebApp
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Ініціалізація TonConnect UI з прямим об'єктом маніфесту (гарантовано без помилок файлу)
+        // Стандартна ініціалізація TonConnect UI через пряме посилання на маніфест
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifest: {
-                url: "https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json",
-                name: "UA Token Mining",
-                iconUrl: "https://providnykzpoun.github.io/Minning-UA/logo.png"
-            },
+            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json',
             buttonRootId: 'ton-connect-button'
         });
 
@@ -464,7 +459,6 @@
             document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
         }
 
-        // Обробка підключеного гаманця
         tonConnectUI.onStatusChange(wallet => {
             if (wallet) {
                 const address = wallet.account.address;
@@ -496,6 +490,7 @@
             osc.stop(audioCtx.currentTime + 0.3);
         }
 
+        // Майнінг / калькуляція зеленого приросту
         setInterval(() => {
             pendingGreen += miningSpeed;
             document.getElementById('increment-display').innerText = '+' + pendingGreen.toFixed(4);
