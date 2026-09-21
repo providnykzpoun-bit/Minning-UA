@@ -1,5 +1,6 @@
-{
-  "url": "https://providnykzpoun.github.io/Minning-UA/",
-  "name": "UA Token Mining",
-  "iconUrl": "https://avatars.githubusercontent.com/u/1?v=4"
-}
+        const manifestString = JSON.stringify({
+            url: "https://providnykzpoun-bit.github.io/Minning-UA",
+            name: "UA Token Mining",
+            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
+        });
+        const manifestUri = 'data:application/json;base64,' + btoa(manifestString);
