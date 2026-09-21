@@ -68,6 +68,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            min-height: 45px;
         }
 
         .user-info {
@@ -87,6 +88,7 @@
             font-weight: bold;
             color: #000;
             overflow: hidden;
+            flex-shrink: 0;
         }
 
         .avatar img {
@@ -105,8 +107,9 @@
         }
 
         #ton-connect-button {
-            transform: scale(0.85);
-            transform-origin: right center;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
         }
 
         .assets-card {
@@ -406,14 +409,25 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Ініціалізація TonConnect через прямий об'єкт маніфесту (без помилок файлу)
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifest: {
-                url: "https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json",
-                name: "UA Token Mining",
-                iconUrl: "https://providnykzpoun.github.io/Minning-UA/logo.png"
-            },
-            buttonRootId: 'ton-connect-button'
+        // Ініціалізація TonConnect після повного завантаження DOM, щоб кнопка гарантовано з'явилася
+        let tonConnectUI;
+        document.addEventListener("DOMContentLoaded", () => {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifest: {
+                    url: "https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json",
+                    name: "UA Token Mining",
+                    iconUrl: "https://providnykzpoun.github.io/Minning-UA/logo.png"
+                },
+                buttonRootId: 'ton-connect-button'
+            });
+
+            tonConnectUI.onStatusChange(wallet => {
+                if (wallet) {
+                    const address = wallet.account.address;
+                    supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
+                    console.Hologram ? console.Hologram('Wallet connected:', address) : console.log('Wallet connected:', address);
+                }
+            });
         });
 
         const SUPABASE_URL = 'https://zitfhobybklgmjpdcbvb.supabase.co';
@@ -462,14 +476,6 @@
             document.getElementById('total-assets').innerText = totalAssets.toFixed(4);
             document.getElementById('pool-assets').innerText = totalAssets.toFixed(4) + ' UA';
         }
-
-        tonConnectUI.onStatusChange(wallet => {
-            if (wallet) {
-                const address = wallet.account.address;
-                supabaseClient.from('users').update({ wallet: address }).eq('id', userId);
-                console.log('Wallet connected:', address);
-            }
-        });
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
