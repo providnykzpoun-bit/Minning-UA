@@ -7,7 +7,7 @@
     <!-- Telegram Web App SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <!-- TonConnect UI CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -494,9 +494,17 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Ініціалізація TonConnect
+        // Динамічний маніфест через Data URI (без зовнішніх файлів, які блокуються)
+        const manifestData = {
+            url: window.location.origin + window.location.pathname.replace(/\/[^/]*$/, ''),
+            name: "UA Token Mining",
+            iconUrl: "https://avatars.githubusercontent.com/u/1?v=4"
+        };
+        const manifestJson = JSON.stringify(manifestData);
+        const manifestUrl = "data:application/json;base64," + btoa(unescape(encodeURIComponent(manifestJson)));
+
         const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://providnykzpoun.github.io/Minning-UA/tonconnect-manifest.json'
+            manifestUrl: manifestUrl
         });
 
         tonConnectUI.onStatusChange(wallet => {
